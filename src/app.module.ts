@@ -7,30 +7,42 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { TodoModule } from './todo/todo.module'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { APP_GUARD } from '@nestjs/core'
+import { ConfigModule, ConfigType } from '@nestjs/config'
+import appConfig from './app.config'
 
 @Module({
     imports: [
         AuthModule,
         UsersModule,
         TodoModule,
+        ConfigModule.forRoot({
+            isGlobal: true,
+        }),
         TypeOrmModule.forRootAsync({
-            useFactory: async () => {
+            imports: [ConfigModule.forFeature(appConfig)],
+            inject: [appConfig.KEY],
+            useFactory: async (appSettings: ConfigType<typeof appConfig>) => {
                 return {
-                    type: 'postgres',
-                    host: 'localhost',
-                    port: 5432,
-                    username: 'postgres',
-                    password: 'postgres',
-                    database: 'todo',
-                    autoLoadEntities: true,
-                    synchronize: true,
+                    type: appSettings.database.type,
+                    host: appSettings.database.host,
+                    port: appSettings.database.port,
+                    username: appSettings.database.username,
+                    password: appSettings.database.password,
+                    database: appSettings.database.database,
+                    autoLoadEntities: appSettings.database.autoLoadEntities,
+                    synchronize: appSettings.database.synchronize,
                 }
             },
         }),
-        ThrottlerModule.forRoot([{
-            ttl: 60000,
-            limit: 100
-        }])
+        ThrottlerModule.forRootAsync({
+            imports: [ConfigModule.forFeature(appConfig)],
+            inject: [appConfig.KEY],
+            useFactory: async (appSettings: ConfigType<typeof appConfig>) => [
+            {
+                ttl: appSettings.throttling.ttl,
+                limit: appSettings.throttling.limit,
+            },
+        ]}),
     ],
     controllers: [AppController],
     providers: [

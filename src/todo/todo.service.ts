@@ -46,8 +46,8 @@ export class TodoService {
 
         return {
             'data': data[0],
-            // 'page': paginationDto.page,
-            // 'limit': paginationDto.limit,
+            'page': filterigPaginationDto.page,
+            'limit': filterigPaginationDto.limit,
             'total': data[1],
         }
     }

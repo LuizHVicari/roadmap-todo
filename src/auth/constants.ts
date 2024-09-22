@@ -1,6 +1,5 @@
 export const jwtConstants = {
-    secret: 'my_jwt_secret',
-    refreshSecret: 'my_refresh_secret',
-
-    refreshTTL: '60s'
+    secret: process.env.JWT_SECRET,
+    refreshSecret: process.env.JWT_REFRESH_SECRET,
+    refreshTTL: process.env.JWT_REFRESH_TTL
 }

@@ -1,9 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common'
 import { Repository } from 'typeorm'
 import { User } from 'src/users/entities/user.entity'
 import { InjectRepository } from '@nestjs/typeorm'
 import { JwtService, TokenExpiredError } from '@nestjs/jwt'
-import { jwtConstants } from './constants'
+import jwtConfig from './jwt.config'
+import { ConfigType } from '@nestjs/config'
 
 @Injectable()
 export class AuthService {
@@ -11,6 +12,8 @@ export class AuthService {
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
         private readonly jwtService: JwtService,
+        @Inject(jwtConfig.KEY)
+        private readonly jwtSettings: ConfigType<typeof jwtConfig>,
     ) {}
 
     async validateUser(email: string, password: string) {
@@ -30,8 +33,8 @@ export class AuthService {
         return {
             access_token: this.jwtService.sign(payload),
             refresh_token: this.jwtService.sign({sub: user}, {
-                secret: jwtConstants.refreshSecret, 
-                expiresIn: jwtConstants.refreshTTL
+                secret: this.jwtSettings.refreshSecret, 
+                expiresIn: this.jwtSettings.refreshTTL
             })
         }
     }
@@ -39,24 +42,22 @@ export class AuthService {
     async refreshToken(refreshToken: string) {
         try {
             const payload = this.jwtService.verify(refreshToken, {
-                secret: jwtConstants.refreshSecret
+                secret: this.jwtSettings.refreshSecret
             })
             const userId = payload.sub.id
 
             const user = await this.userRepository.findOneBy({id:userId, active: true})
             if (!user) {
-                throw new UnauthorizedException
+                throw new UnauthorizedException()
             }
             const newTokenPayload = { email: user.email, sub: user.id}
             return {access_token: this.jwtService.sign(newTokenPayload)}
 
         } catch (error) {
             if (error instanceof TokenExpiredError) {
-                throw new UnauthorizedException
+                throw new UnauthorizedException()
             }
             throw error
         }
-        // const payload = this.jwtService.decode(refreshToken)  
-        // console.log(payload) 
     }
 }
