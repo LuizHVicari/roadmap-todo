@@ -1,0 +1,14 @@
+{
+  "singleQuote": true,
+  "trailingComma": "all",
+  "arrowParens": "avoid",
+  "insertPragma": false,
+  "printWidth": 80,
+  "requirePragma": false,
+  "semi": false,
+  "tabWidth": 4,
+  "quoteProps": "as-needed",
+  "useTabs": false,
+  "proseWrap": "always",
+  "bracketSpacing": true
+}
